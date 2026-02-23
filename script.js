@@ -1,4 +1,6 @@
 const form = document.getElementById('calculator');
+const errorMessage = document.getElementById('errorMessage');
+
 const fields = {
   capital: document.getElementById('capital'),
   lowerPrice: document.getElementById('lowerPrice'),
@@ -25,26 +27,43 @@ const fmt = (num, digits = 2) =>
     maximumFractionDigits: digits
   }).format(num);
 
+const parseField = (input) => Number(input.value.replace(',', '.'));
+
 function setDeltaColor(el, value) {
   el.classList.remove('positive', 'negative');
   el.classList.add(value >= 0 ? 'positive' : 'negative');
 }
 
+function showError(text) {
+  errorMessage.textContent = text;
+}
+
+function clearError() {
+  errorMessage.textContent = '';
+}
+
 function calculate(event) {
   event?.preventDefault();
 
-  const capital = Number(fields.capital.value);
-  const lower = Number(fields.lowerPrice.value);
-  const upper = Number(fields.upperPrice.value);
-  const grids = Number(fields.grids.value);
-  const leverage = Number(fields.leverage.value);
-  const feePercent = Number(fields.fee.value) / 100;
-  const executions = Number(fields.executions.value);
+  const capital = parseField(fields.capital);
+  const lower = parseField(fields.lowerPrice);
+  const upper = parseField(fields.upperPrice);
+  const grids = parseField(fields.grids);
+  const leverage = parseField(fields.leverage);
+  const feePercent = parseField(fields.fee) / 100;
+  const executions = parseField(fields.executions);
 
-  if (upper <= lower || grids < 2 || capital <= 0 || leverage < 1) {
-    alert('Bitte prüfe die Eingaben. Obere Grenze muss größer als untere sein.');
+  if ([capital, lower, upper, grids, leverage, feePercent, executions].some(Number.isNaN)) {
+    showError('Bitte nur gültige Zahlen eingeben.');
     return;
   }
+
+  if (upper <= lower || grids < 2 || capital <= 0 || leverage < 1 || executions < 1) {
+    showError('Bitte Eingaben prüfen: obere Grenze > untere, Grids ≥ 2, Kapital > 0.');
+    return;
+  }
+
+  clearError();
 
   const effectiveCapital = capital * leverage;
   const priceRange = upper - lower;
@@ -79,4 +98,8 @@ function calculate(event) {
 }
 
 form.addEventListener('submit', calculate);
+Object.values(fields).forEach((field) => {
+  field.addEventListener('input', calculate);
+});
+
 calculate();

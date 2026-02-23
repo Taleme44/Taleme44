@@ -85,6 +85,12 @@ form {
   gap: 0.75rem;
 }
 
+.form-hint {
+  margin: -0.2rem 0 0.15rem;
+  color: #b8c2dd;
+  font-size: 0.8rem;
+}
+
 label {
   display: grid;
   gap: 0.35rem;
@@ -166,6 +172,13 @@ footer {
 
 .negative {
   color: var(--danger);
+}
+
+.error-message {
+  margin: 0;
+  min-height: 1.3rem;
+  color: var(--danger);
+  font-size: 0.85rem;
 }
 
 @media (max-width: 920px) {

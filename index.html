@@ -26,20 +26,21 @@
       <section class="card grid-layout">
         <form id="calculator" class="panel" autocomplete="off">
           <h2>Parameter</h2>
+          <p class="form-hint">Tipp: Du kannst Komma oder Punkt bei Dezimalzahlen verwenden.</p>
 
           <label>
             Investitionsbetrag (USDT)
-            <input type="number" id="capital" min="10" value="1000" step="10" required />
+            <input type="text" inputmode="decimal" id="capital" value="1000" required />
           </label>
 
           <label>
             Untere Preisgrenze
-            <input type="number" id="lowerPrice" min="0.0001" step="0.0001" value="50000" required />
+            <input type="text" inputmode="decimal" id="lowerPrice" value="50000" required />
           </label>
 
           <label>
             Obere Preisgrenze
-            <input type="number" id="upperPrice" min="0.0001" step="0.0001" value="65000" required />
+            <input type="text" inputmode="decimal" id="upperPrice" value="65000" required />
           </label>
 
           <label>
@@ -49,12 +50,12 @@
 
           <label>
             Hebel (x)
-            <input type="number" id="leverage" min="1" max="125" step="1" value="1" required />
+            <input type="text" inputmode="decimal" id="leverage" value="1" required />
           </label>
 
           <label>
             Trading-Fee je Trade (%)
-            <input type="number" id="fee" min="0" step="0.001" value="0.1" required />
+            <input type="text" inputmode="decimal" id="fee" value="0.1" required />
           </label>
 
           <label>
@@ -63,6 +64,7 @@
           </label>
 
           <button type="submit">Berechnen</button>
+          <p id="errorMessage" class="error-message" aria-live="assertive"></p>
         </form>
 
         <section class="panel" aria-live="polite">
