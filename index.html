@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grid-Bot Rechner 2025</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <p class="eyebrow">Krypto • Futures • Spot</p>
+        <h1>Grid-Bot Rechner 2025</h1>
+        <p>
+          Simuliere in Sekunden dein Grid-Setup: Kapitalverteilung,
+          Kursabstände, Gebühren und erwartete Rendite pro Grid.
+        </p>
+      </header>
+
+      <section class="card grid-layout">
+        <form id="calculator" class="panel" autocomplete="off">
+          <h2>Parameter</h2>
+
+          <label>
+            Investitionsbetrag (USDT)
+            <input type="number" id="capital" min="10" value="1000" step="10" required />
+          </label>
+
+          <label>
+            Untere Preisgrenze
+            <input type="number" id="lowerPrice" min="0.0001" step="0.0001" value="50000" required />
+          </label>
+
+          <label>
+            Obere Preisgrenze
+            <input type="number" id="upperPrice" min="0.0001" step="0.0001" value="65000" required />
+          </label>
+
+          <label>
+            Anzahl Grids
+            <input type="number" id="grids" min="2" max="300" step="1" value="20" required />
+          </label>
+
+          <label>
+            Hebel (x)
+            <input type="number" id="leverage" min="1" max="125" step="1" value="1" required />
+          </label>
+
+          <label>
+            Trading-Fee je Trade (%)
+            <input type="number" id="fee" min="0" step="0.001" value="0.1" required />
+          </label>
+
+          <label>
+            Geschätzte tägliche Grid-Ausführungen
+            <input type="number" id="executions" min="1" step="1" value="8" required />
+          </label>
+
+          <button type="submit">Berechnen</button>
+        </form>
+
+        <section class="panel" aria-live="polite">
+          <h2>Ergebnis</h2>
+          <div class="kpi-grid">
+            <article>
+              <span>Grid-Abstand</span>
+              <strong id="gridSpacing">-</strong>
+            </article>
+            <article>
+              <span>Order-Größe je Grid</span>
+              <strong id="orderSize">-</strong>
+            </article>
+            <article>
+              <span>Brutto-Profit / Grid</span>
+              <strong id="grossProfit">-</strong>
+            </article>
+            <article>
+              <span>Netto-Profit / Grid</span>
+              <strong id="netProfit">-</strong>
+            </article>
+            <article>
+              <span>Geschätzter Tagesprofit</span>
+              <strong id="dailyProfit">-</strong>
+            </article>
+            <article>
+              <span>ROI pro Tag</span>
+              <strong id="roi">-</strong>
+            </article>
+          </div>
+
+          <div class="levels">
+            <h3>Erste Grid-Level</h3>
+            <ol id="levelsList"></ol>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      Hinweis: Simulation ohne Gewähr. Märkte können stark schwanken.
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
