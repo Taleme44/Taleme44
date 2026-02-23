@@ -54,6 +54,26 @@ h1 {
   line-height: 1.5;
 }
 
+
+.preview-note {
+  margin: 0 0 1rem;
+  border: 1px solid rgba(109, 124, 255, 0.45);
+  background: rgba(109, 124, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  color: #d9e0ff;
+  line-height: 1.45;
+}
+
+.preview-note code {
+  background: rgba(14, 19, 32, 0.75);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.08rem 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+
 .card {
   background: linear-gradient(180deg, var(--surface) 0%, #0f1421 100%);
   border: 1px solid var(--border);
