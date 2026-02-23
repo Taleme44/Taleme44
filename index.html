@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web3 DeFi Strategie Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>DeFi Strategie Dashboard</h1>
+        <p>Staking, Lending, Funding-Rate Farming &amp; mehr zentral tracken.</p>
+      </div>
+      <button id="seedDemoData" class="ghost">Demo-Daten laden</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <h2>Neue Strategie erfassen</h2>
+        <form id="strategyForm" class="form-grid">
+          <label>
+            Name
+            <input name="name" placeholder="z. B. ETH Staking" required />
+          </label>
+
+          <label>
+            Kategorie
+            <select name="category" required>
+              <option value="staking">Staking</option>
+              <option value="lending">Lending</option>
+              <option value="funding-rate-farming">Funding-Rate Farming</option>
+              <option value="liquidity-provision">Liquidity Provision</option>
+              <option value="yield-optimizer">Yield Optimizer</option>
+              <option value="other">Andere</option>
+            </select>
+          </label>
+
+          <label>
+            Protokoll
+            <input name="protocol" placeholder="Aave, Lido, GMX ..." required />
+          </label>
+
+          <label>
+            Chain
+            <input name="chain" placeholder="Ethereum, Arbitrum ..." required />
+          </label>
+
+          <label>
+            Startdatum
+            <input type="date" name="startDate" required />
+          </label>
+
+          <label>
+            Kapital (USD)
+            <input type="number" step="0.01" min="0" name="invested" required />
+          </label>
+
+          <label>
+            Aktueller Wert (USD)
+            <input type="number" step="0.01" min="0" name="currentValue" required />
+          </label>
+
+          <label>
+            Notiz
+            <input name="notes" placeholder="Optional" />
+          </label>
+
+          <button type="submit">Strategie speichern</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Performance-Übersicht</h2>
+          <div class="pill-switch" role="tablist" aria-label="Zeitraum auswählen">
+            <button class="period active" data-period="daily">Täglich</button>
+            <button class="period" data-period="monthly">Monatlich</button>
+            <button class="period" data-period="yearly">Jährlich</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <article class="kpi"><span>Gesamtkapital</span><strong id="kpiCapital">$0.00</strong></article>
+          <article class="kpi"><span>Aktueller Wert</span><strong id="kpiCurrent">$0.00</strong></article>
+          <article class="kpi"><span>Gewinn / Verlust</span><strong id="kpiPnl">$0.00</strong></article>
+          <article class="kpi"><span>ROI</span><strong id="kpiRoi">0.00%</strong></article>
+        </div>
+
+        <h3 id="periodTitle">Tägliche Auswertung</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Zeitraum</th>
+                <th>Strategien</th>
+                <th>Kapital</th>
+                <th>Wert</th>
+                <th>PnL</th>
+                <th>ROI</th>
+              </tr>
+            </thead>
+            <tbody id="performanceRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel full">
+        <div class="panel-header">
+          <h2>Alle Strategien</h2>
+          <button id="clearAll" class="danger">Alle löschen</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Kategorie</th>
+                <th>Protokoll</th>
+                <th>Chain</th>
+                <th>Start</th>
+                <th>Kapital</th>
+                <th>Wert</th>
+                <th>PnL</th>
+                <th>ROI</th>
+                <th>Notiz</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="strategyRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <template id="strategyRowTemplate">
+      <tr>
+        <td class="name"></td>
+        <td class="category"></td>
+        <td class="protocol"></td>
+        <td class="chain"></td>
+        <td class="startDate"></td>
+        <td class="invested"></td>
+        <td class="currentValue"></td>
+        <td class="pnl"></td>
+        <td class="roi"></td>
+        <td class="notes"></td>
+        <td><button class="danger small delete">Löschen</button></td>
+      </tr>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
