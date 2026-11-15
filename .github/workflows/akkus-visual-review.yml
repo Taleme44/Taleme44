@@ -31,7 +31,7 @@ jobs:
           ):
              out=shotroot/'vorschau'/phase
              out.mkdir(exist_ok=True)
-             modified=base.replace(marker,code+marker)
+             modified=base.replace('<head>', '<head><base href="file:///tmp/akkus-vis/vorschau/">').replace(marker,code+marker)
              (out/'index.html').write_text(modified,encoding='utf8')
           PY
           set -e
