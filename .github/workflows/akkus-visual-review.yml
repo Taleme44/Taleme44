@@ -1,0 +1,55 @@
+name: Visual Review Volunteer Portal
+on:
+  push:
+    paths:
+      - '.github/workflows/akkus-visual-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render desktop and mobile screenshots of the redesign
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+          root=Path('akkus-freiwilligendienst-bewerbung')
+          shotroot=Path('/tmp/akkus-vis')
+          shutil.copytree(root,shotroot)
+          path=shotroot/'vorschau/index.html'
+          base=path.read_text(encoding='utf8')
+          marker='render();\n})();'
+          assert marker in base
+          for phase,code in (
+             ('welcome',''),
+             ('question','state.phase="form";state.index=0;'),
+             ('dashboard','state.phase="finish";state.dashTab="overview";')
+          ):
+             out=shotroot/'vorschau'/phase
+             out.mkdir(exist_ok=True)
+             modified=base.replace(marker,code+marker)
+             (out/'index.html').write_text(modified,encoding='utf8')
+          PY
+          set -e
+          BROWSER="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          echo "Using browser $BROWSER"
+          mkdir -p akkus-freiwilligendienst-bewerbung/design-review
+          for v in welcome question dashboard; do
+            timeout 30s "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --allow-file-access-from-files --virtual-time-budget=3500 --window-size=1440,960 --screenshot="$PWD/akkus-freiwilligendienst-bewerbung/design-review/$v.png" "file:///tmp/akkus-vis/vorschau/$v/index.html" >/dev/null 2>&1
+            test -s "akkus-freiwilligendienst-bewerbung/design-review/$v.png"
+          done
+          timeout 30s "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --allow-file-access-from-files --virtual-time-budget=3500 --window-size=390,844 --screenshot="$PWD/akkus-freiwilligendienst-bewerbung/design-review/mobile.png" "file:///tmp/akkus-vis/vorschau/dashboard/index.html" >/dev/null 2>&1
+          test -s "akkus-freiwilligendienst-bewerbung/design-review/mobile.png"
+      - name: Commit design review captures
+        run: |
+          git config user.name 'Agentur Akkus Visual QA'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add akkus-freiwilligendienst-bewerbung/design-review/*.png
+          if ! git diff --cached --quiet; then
+            git commit -m 'Capture redesigned volunteer applicant screens for visual QA'
+            git push
+          fi
