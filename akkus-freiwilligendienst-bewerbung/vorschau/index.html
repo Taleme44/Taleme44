@@ -185,7 +185,7 @@ if(f.type==="text"||f.type==="number"||f.type==="date"){
 var t=f.type==="text"?(f.inputType||"text"):f.type;
 out+='<input class="input" type="'+t+'" data-field="'+escapeHtml(f.id)+'" value="'+escapeHtml(v||"")+'"'+(f.min!==undefined?' min="'+f.min+'"':"")+(f.max!==undefined?' max="'+f.max+'"':"")+(f.type==="number"?' step="any"':"")+' placeholder="'+escapeHtml(f.placeholder||"Optional eingeben")+'">';
 }
-if(f.type==="select"){out+='<select class="select" data-field="'+escapeHtml(f.id)+'"><option value="">'+L('Bitte auswählen (freiwillig)','Choose (optional'))+'</option>'+f.options.map(function(o){return '<option value="'+escapeHtml(o)+'"'+(v===o?' selected':'')+'>'+escapeHtml(o)+'</option>';}).join("")+'</select>';}
+if(f.type==="select"){out+='<select class="select" data-field="'+escapeHtml(f.id)+'"><option value="">'+L('Bitte auswählen (freiwillig)','Choose (optional)')+'</option>'+f.options.map(function(o){return '<option value="'+escapeHtml(o)+'"'+(v===o?' selected':'')+'>'+escapeHtml(o)+'</option>';}).join("")+'</select>';}
 if(f.type==="choice"||isMulti){
 var selected=isMulti?(Array.isArray(v)?v:[]):[];
 out+='<div class="choices">'+f.options.map(function(o){var checked=isMulti?selected.indexOf(o)>=0:v===o;return '<button type="button" class="choice'+(checked?' selected':'')+'" data-option="'+escapeHtml(o)+'" data-choice="'+escapeHtml(f.id)+'" aria-pressed="'+checked+'">'+escapeHtml(o)+'</button>';}).join("")+'</div>';
