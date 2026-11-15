@@ -17,6 +17,7 @@
 </head>
 <body>
 <div id="app"></div>
+<script src="translations.js"></script>
 <script>
 (function(){
 "use strict";
@@ -169,6 +170,29 @@ var docs=[
 {id:"motivation",name:"Motivationsschreiben",desc:"Wenn vorhanden, Deutsch oder Englisch",accept:".pdf,.doc,.docx",multiple:true},
 {id:"video",name:"Persönliches Bewerbungsvideo",desc:"Bitte nimm ein kurzes Vorstellungsvideo für deine zukünftige Einsatzstelle auf (ca. 1–2 Minuten).",accept:"video/*",multiple:false,photo:false,video:true}
 ];
+
+function languageText(raw){
+  var source=String(raw===undefined||raw===null?"":raw);
+  if(lang!=="en")return source;
+  var text=source.trim(),dictionary=window.AkkusTranslations||{},tr=dictionary[text];
+  if(tr!==undefined)return source.replace(text,tr);
+  var a=/^Schritt (\d+) von (\d+)$/.exec(text);
+  if(a)return "Step "+a[1]+" of "+a[2];
+  var b=/^(\d+) % durchgesehen$/.exec(text);
+  if(b)return b[1]+"% reviewed";
+  return source;
+}
+function translateRenderedUI(){
+  if(document.documentElement)document.documentElement.lang=lang;
+  if(lang!=="en"||!document.createTreeWalker)return;
+  var walker=document.createTreeWalker(app,4),node;
+  while((node=walker.nextNode())){
+    if(node.nodeValue&&node.nodeValue.trim())node.nodeValue=languageText(node.nodeValue);
+  }
+  if(app.querySelectorAll)app.querySelectorAll("[placeholder],[title]").forEach(function(el){
+    ["placeholder","title"].forEach(function(k){var v=el.getAttribute(k);if(v)el.setAttribute(k,languageText(v));});
+  });
+}
 function escapeHtml(x){return String(x===undefined||x===null?"":x).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function activeQuestions(){return questions.filter(function(q){return visible(q.when);});}
 function current(){var list=activeQuestions();if(state.index<0)state.index=0;if(state.index>=list.length)state.index=list.length-1;return list[state.index];}
@@ -195,7 +219,7 @@ if(f.maxSelect)out+='<div class="hint">'+L("Bitte höchstens","Please select at 
 if(f.type==="textarea"){
 out+='<textarea class="textarea" id="text-'+escapeHtml(f.id)+'" data-field="'+escapeHtml(f.id)+'" placeholder="'+L('Schreibe deine Antwort ...','Write your answer ...')+'">'+escapeHtml(v||"")+'</textarea>';
 if(f.suggestions&&f.suggestions.length){
-out+='<div class="hint">Ideen zum Anklicken – deine Antwort kannst du anschließend frei ändern:</div><div class="suggestions">'+f.suggestions.map(function(o){return '<button type="button" class="suggestion" data-append="'+escapeHtml(f.id)+'" data-text="'+escapeHtml(o)+'">+ '+escapeHtml(o)+'</button>';}).join("")+'</div>';
+out+='<div class="hint">Ideen zum Anklicken – deine Antwort kannst du anschließend frei ändern:</div><div class="suggestions">'+f.suggestions.map(function(o){return '<button type="button" class="suggestion" data-append="'+escapeHtml(f.id)+'" data-text="'+escapeHtml(o)+'">+ '+escapeHtml(languageText(o))+'</button>';}).join("")+'</div>';
 }
 if(f.voice)out+='<div class="text-tools"><button type="button" class="mic" data-mic="'+escapeHtml(f.id)+'" title="Antwort diktieren">'+L('🎙 Antwort sprechen','🎙 Dictate answer')+'</button><span class="speech-note">Nur wenn dein Browser Spracherkennung unterstützt.</span></div>';
 }
@@ -258,18 +282,18 @@ var content=active==="documents"?documentHtml:active==="answers"?answersHtml:act
 '<div class="dash-panel"><h2>Willkommen in deinem Bewerber-Dashboard</h2><p>Hier siehst du auf einen Blick deine Antworten und welche Unterlagen noch ergänzt werden können.</p>'+profileHtml+questionChecklist()+'<div class="dash-shortcuts"><button class="btn primary" data-dash-tab="documents">📁 Fehlende Unterlagen ansehen</button><button class="btn secondary" data-dash-tab="answers">Fragebogen & PDF</button><button class="btn secondary" data-dash-tab="contract">Vermittlungsvertrag</button></div></div><div class="dash-panel"><h2>Dokumentenstatus</h2><div class="upload-grid">'+applicableDocs().map(documentCard).join("")+'</div></div><div class="dash-panel"><h2>Kosten und Vereinbarung</h2>'+contractHtml+'</div>';
 app.innerHTML=renderHeader()+'<main class="dashboard-shell"><aside class="dashboard-sidebar"><span class="eyebrow">AGENTUR AKKUS</span><h1>Mein Dashboard</h1><p class="dashboard-name">'+escapeHtml(name)+'</p><div class="dashboard-nav">'+navHtml+'</div><div class="sidebar-note"><b>Status: Vorschau</b><p>Kein echter Login oder Dokumenten-Upload aktiv.</p></div></aside><section class="dashboard-main"><div class="dashboard-top"><div><span class="eyebrow">Bewerbung FSJ · FÖJ · BFD</span><h1>'+escapeHtml(active==="overview"?"Meine Bewerbung":active==="documents"?"Dokumente":active==="answers"?"Mein Fragebogen":"Vermittlungsvertrag")+'</h1></div><button type="button" class="btn secondary small" data-act="save">Zwischenstand speichern</button></div>'+accountInfo+content+'</section></main>';
 }
-function render(){if(state.phase==="welcome")renderWelcome();else if(state.phase==="form")renderForm();else renderDashboard();window.scrollTo(0,0);}
+function render(){if(state.phase==="welcome")renderWelcome();else if(state.phase==="form")renderForm();else renderDashboard();translateRenderedUI();window.scrollTo(0,0);}
 function nextStep(dir){stopSpeech();var list=activeQuestions();if(dir<0&&state.index<=0){state.phase="welcome";render();return;}state.index+=dir;if(state.index<0)state.index=0;if(state.index>=list.length){state.phase="finish";render();return;}render();}
 function saveLocal(){try{localStorage.setItem("akkus_freiwilligendienst_draft_v1",JSON.stringify({answers:state.answers,index:state.index,at:new Date().toISOString()}));alert("Dein Text-Zwischenstand wurde nur auf diesem Gerät gespeichert. Dateien sind nicht gespeichert oder hochgeladen.");}catch(e){alert("Lokales Speichern ist hier nicht verfügbar.");}}
 function downloadJSON(){var blob=new Blob([JSON.stringify({hinweis:"Vorschau – nicht an die Agentur übermittelt",answers:state.answers},null,2)],{type:"application/json;charset=utf-8"});var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="Agentur-Akkus-Freiwilligendienst-Bewerbung.json";a.click();setTimeout(function(){URL.revokeObjectURL(url);},1200);}
 var currentRecognizer=null;
 function speakToField(id,button){var Speech=window.SpeechRecognition||window.webkitSpeechRecognition; if(!Speech){alert("Die Spracherkennung ist in diesem Browser nicht verfügbar. Bitte benutze die Diktierfunktion deiner Tastatur oder schreibe den Text.");return;}
-try{if(currentRecognizer){currentRecognizer.stop();currentRecognizer=null;}var rec=new Speech();currentRecognizer=rec;rec.lang="de-DE";rec.interimResults=false;rec.maxAlternatives=1;button.classList.add("recording");button.textContent="● Aufnahme läuft";rec.onresult=function(e){var text=e.results[0][0].transcript;var old=String(state.answers[id]||"");state.answers[id]=old?(old.trim()+" "+text):text;var field=document.getElementById("text-"+id);if(field)field.value=state.answers[id];};rec.onerror=function(e){console.warn("Diktat:",e.error);};rec.onend=function(){button.classList.remove("recording");button.textContent="🎙 Antwort sprechen";currentRecognizer=null;};rec.start();}catch(e){alert("Mikrofon konnte nicht gestartet werden. Bitte erlaube die Aufnahme oder benutze die Tastatur.");}}
+try{if(currentRecognizer){currentRecognizer.stop();currentRecognizer=null;}var rec=new Speech();currentRecognizer=rec;rec.lang=lang==="en"?"en-US":"de-DE";rec.interimResults=false;rec.maxAlternatives=1;button.classList.add("recording");button.textContent="● Aufnahme läuft";rec.onresult=function(e){var text=e.results[0][0].transcript;var old=String(state.answers[id]||"");state.answers[id]=old?(old.trim()+" "+text):text;var field=document.getElementById("text-"+id);if(field)field.value=state.answers[id];};rec.onerror=function(e){console.warn("Diktat:",e.error);};rec.onend=function(){button.classList.remove("recording");button.textContent="🎙 Antwort sprechen";currentRecognizer=null;};rec.start();}catch(e){alert("Mikrofon konnte nicht gestartet werden. Bitte erlaube die Aufnahme oder benutze die Tastatur.");}}
 app.addEventListener("input",function(e){var id=e.target.getAttribute("data-field");if(id)setAnswer(id,e.target.value);var index=e.target.getAttribute("data-intern");if(index!==null){var arr=state.answers.internshipRows||[];if(arr[Number(index)])arr[Number(index)][e.target.getAttribute("data-intern-field")]=e.target.value;}});
 app.addEventListener("change",function(e){var id=e.target.getAttribute("data-field");if(id){setAnswer(id,e.target.value);clearDependent();render();}var fileId=e.target.getAttribute("data-file")||e.target.getAttribute("data-file-camera");if(fileId){var fresh=Array.from(e.target.files||[]).map(function(f){return f.name;});var existing=state.files[fileId]||[];state.files[fileId]=existing.concat(fresh).slice(0,20);render();}});
 app.addEventListener("click",function(e){
 var choice=e.target.closest("[data-choice]");if(choice){var id=choice.getAttribute("data-choice"),opt=choice.getAttribute("data-option");var q=current();var field=q.fields.find(function(f){return f.id===id;});if(!field)return;if(field.type==="multi"){var a=Array.isArray(state.answers[id])?state.answers[id].slice():[];var pos=a.indexOf(opt);if(pos>=0)a.splice(pos,1);else {if(opt==="Alle Bereiche")a=["Alle Bereiche"];else {a=a.filter(function(x){return x!=="Alle Bereiche";});if(field.maxSelect&&a.length>=field.maxSelect){alert("Bitte wähle höchstens "+field.maxSelect+" Optionen.");return;}a.push(opt);}}setAnswer(id,a);}else setAnswer(id,opt);clearDependent();render();return;}
-var sug=e.target.closest("[data-append]");if(sug){var id=sug.getAttribute("data-append"),text=sug.getAttribute("data-text"),prev=String(state.answers[id]||"");setAnswer(id,prev?(prev.trim()+" "+text):text);var area=document.getElementById("text-"+id);if(area){area.value=state.answers[id];area.focus();}return;}
+var sug=e.target.closest("[data-append]");if(sug){var id=sug.getAttribute("data-append"),text=languageText(sug.getAttribute("data-text")),prev=String(state.answers[id]||"");setAnswer(id,prev?(prev.trim()+" "+text):text);var area=document.getElementById("text-"+id);if(area){area.value=state.answers[id];area.focus();}return;}
 var mic=e.target.closest("[data-mic]");if(mic){speakToField(mic.getAttribute("data-mic"),mic);return;}
 var rm=e.target.closest("[data-remove-intern]");if(rm){var i=Number(rm.getAttribute("data-remove-intern"));var arr=state.answers.internshipRows||[];arr.splice(i,1);render();return;}
 var jump=e.target.closest("[data-jump]");if(jump){var target=jump.getAttribute("data-jump"),idx=activeQuestions().findIndex(function(q){return q.id===target;});if(idx>=0){state.index=idx;state.phase="form";render();}return;}
