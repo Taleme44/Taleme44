@@ -42,7 +42,7 @@ jobs:
             timeout 30s "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --allow-file-access-from-files --virtual-time-budget=3500 --window-size=1440,960 --screenshot="$PWD/akkus-freiwilligendienst-bewerbung/design-review/$v.png" "file:///tmp/akkus-vis/vorschau/$v/index.html" >/dev/null 2>&1
             test -s "akkus-freiwilligendienst-bewerbung/design-review/$v.png"
           done
-          timeout 30s "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --allow-file-access-from-files --virtual-time-budget=3500 --window-size=390,844 --screenshot="$PWD/akkus-freiwilligendienst-bewerbung/design-review/mobile.png" "file:///tmp/akkus-vis/vorschau/dashboard/index.html" >/dev/null 2>&1
+          timeout 30s "$BROWSER" --headless --no-sandbox --disable-dev-shm-usage --disable-gpu --hide-scrollbars --allow-file-access-from-files --virtual-time-budget=3500 --window-size=500,844 --screenshot="$PWD/akkus-freiwilligendienst-bewerbung/design-review/mobile.png" "file:///tmp/akkus-vis/vorschau/dashboard/index.html" >/dev/null 2>&1
           test -s "akkus-freiwilligendienst-bewerbung/design-review/mobile.png"
       - name: Commit design review captures
         run: |
