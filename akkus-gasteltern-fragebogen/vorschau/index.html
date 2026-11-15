@@ -146,14 +146,14 @@ const opt=(id)=>String(state.values[id]??'').trim();
  // 1. Elternteile und Kontaktdaten
 add(0,'one-name','Elternteil 1: Wie ist dein Vor- und Nachname?','Wir sprechen dich im weiteren Verlauf mit deinem Vornamen an.',[txt('p1first','Vorname'),txt('p1last','Nachname')]);
 add(0,'single','Bist du alleinerziehend?','Wenn ja, entfallen die Angaben zu einem zweiten Elternteil.',[rad('single','Alleinerziehend?',['Ja','Nein'])]);
-add(0,'family-eu','Hat mindestens ein Elternteil die deutsche, eine EU-/EWR- oder die Schweizer Staatsangehörigkeit?','Wähle Ja oder Nein.',[rad('euMember','Staatsangehörigkeit EU/EWR, Deutschland oder Schweiz?',['Ja','Nein']),txt('nonEUcitizenships','Welche Staatsangehörigkeit(en) habt ihr?',false,{when:()=>opt('euMember')==='Nein'})]);
+add(0,'two-name','Elternteil 2: Wie lautet dein Vor- und Nachname?','Bei Alleinerziehenden wird diese Frage übersprungen.',[txt('p2first','Vorname'),txt('p2last','Nachname')],{when:()=>opt('single')==='Nein'});
 add(0,'one-details','Elternteil 1: Wann bist du geboren und was ist dein Beruf?','Beide Angaben sind freiwillig.',[dat('p1dob','Geburtsdatum'),txt('p1job','Beruf')]);
-add(0,'two-name','Elternteil 2: Wie lautet dein Vor- und Nachname?','Bei Alleinerziehenden wird diese Frage übersprungen.',[txt('p2first','Vorname'),txt('p2last','Nachname')],{when:()=>opt('single')!=='Ja'});
-add(0,'two-details','Elternteil 2: Wann bist du geboren und was ist dein Beruf?','Beide Angaben sind freiwillig.',[dat('p2dob','Geburtsdatum'),txt('p2job','Beruf')],{when:()=>opt('single')!=='Ja'});
-add(0,'relation','Wie ist eure familiäre Situation?','Wählt die Antwort, die am besten auf euch zutrifft.',[rad('relation','Familienform',['Ehepartner','Lebenspartner','Unverheiratetes Paar'])],{when:()=>opt('single')!=='Ja'});
+add(0,'two-details','Elternteil 2: Wann bist du geboren und was ist dein Beruf?','Beide Angaben sind freiwillig.',[dat('p2dob','Geburtsdatum'),txt('p2job','Beruf')],{when:()=>opt('single')==='Nein'});
+add(0,'family-eu','Hat mindestens ein Elternteil die deutsche, eine EU-/EWR- oder die Schweizer Staatsangehörigkeit?','Wähle Ja oder Nein.',[rad('euMember','Staatsangehörigkeit EU/EWR, Deutschland oder Schweiz?',['Ja','Nein']),txt('nonEUcitizenships','Welche Staatsangehörigkeit(en) habt ihr?',false,{when:()=>opt('euMember')==='Nein'})]);
+add(0,'relation','Wie ist eure familiäre Situation?','Wählt die Antwort, die am besten auf euch zutrifft.',[rad('relation','Familienform',['Ehepartner','Lebenspartner','Unverheiratetes Paar'])],{when:()=>opt('single')==='Nein'});
 add(0,'address','Wo wohnt ihr?','Tragt hier eure Anschrift ein.',[txt('street','Straße'),txt('houseNo','Hausnummer'),txt('zip','Postleitzahl',false,{inputmode:'numeric'}),txt('city','Wohnort')]);
 add(0,'contact','Wie lautet eure Telefonnummer und E-Mail-Adresse?','So können wir euch erreichen.',[txt('phone','Telefonnummer',false,{type:'tel'}),txt('mail','E-Mail-Adresse',false,{type:'email'})]);
-add(0,'parent-at-home','Seid ihr tagsüber zu Hause?','Wählt für jedes Elternteil Ja oder Nein.',[rad('p1athome','Ist Elternteil 1 tagsüber zu Hause?',['Ja','Nein']),rad('p2athome','Ist Elternteil 2 tagsüber zu Hause?',['Ja','Nein'],false,{when:()=>opt('single')!=='Ja'})]);
+add(0,'parent-at-home','Seid ihr tagsüber zu Hause?','Wählt für jedes Elternteil Ja oder Nein.',[rad('p1athome','Ist Elternteil 1 tagsüber zu Hause?',['Ja','Nein']),rad('p2athome','Ist Elternteil 2 tagsüber zu Hause?',['Ja','Nein'],false,{when:()=>opt('single')==='Nein'})]);
 
 // 2. Kinder und Haushalt
 add(1,'children-count','Wie viele Kinder unter 18 Jahren wohnen bei euch?','Danach kannst du zu jedem Kind freiwillige Angaben ergänzen.',[num('kids','Anzahl der Kinder unter 18',false,{min:0,max:12})]);
