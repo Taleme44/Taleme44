@@ -30,7 +30,7 @@ jobs:
           cat >/tmp/check.cjs <<'JS'
           const fs=require('fs'),vm=require('vm');
           let src=fs.readFileSync('/tmp/fsj.js','utf8');
-          let checks=String.raw\`
+          let checks=String.raw`
           var counter=0;
           function check(ok,n){if(!ok)throw Error('FAIL '+n);console.log('PASS '+n);counter++}
           check(questions.length>40,'many questions');
@@ -46,7 +46,7 @@ jobs:
           state.phase='welcome';lang='en';render();check(app.innerHTML.includes('Start questionnaire'),'english welcome');
           state.phase='form';state.index=0;render();check(app.innerHTML.includes('What is your first and last name?'),'english question');
           console.log('Passed',counter);
-          \`;
+          `;
           src=src.replace(/\}\)\(\);\s*$/, m=>checks+m);
           const app={innerHTML:'',addEventListener(){},querySelector(){return null}};
           const c={document:{getElementById(){return app},documentElement:{lang:'de'}},window:{scrollTo(){}},localStorage:{getItem(){return null},setItem(){},removeItem(){}},alert(){},confirm(){return false},console,setTimeout,clearTimeout,Blob,URL};
