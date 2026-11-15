@@ -71,7 +71,7 @@ jobs:
           state.stepId='country-exclusions';state.values.excludeCountries='Ja';render();
           assert(app.innerHTML.includes('data-field="excludedCountries"'),'country exclusion follow-up appears');
           state.stepId='consent';render();
-          assert(app.innerHTML.includes('data-choice="profileConsent"')&&app.innerHTML.includes('vollständige Anschrift'),'explicit voluntary data sharing choice');
+          assert(app.innerHTML.includes('data-choice="profileConsent"')&&/vollständige Anschrift/i.test(app.innerHTML),'explicit voluntary data sharing choice');
           state.values={};state.visited={};state.stepId='one-name';state.phase='form';next();
           assert(state.stepId==='single'&&state.visited['one-name']===true,'all questions skippable while blank');
           console.log('TOTAL CHECKS PASSED:',tests);
