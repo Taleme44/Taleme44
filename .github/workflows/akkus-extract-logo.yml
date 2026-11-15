@@ -20,7 +20,7 @@ jobs:
           m=re.search(r'<span class="mark"><img src="data:image/png;base64,([A-Za-z0-9+/=]+)"',src)
           if not m: raise RuntimeError('Original logo not found in existing Agentur Akkus questionnaire')
           logo=base64.b64decode(m.group(1),validate=True)
-          if not logo.startswith(b'\\x89PNG\\r\\n\\x1a\\n') or len(logo)<10000: raise RuntimeError('Original logo invalid')
+          if not logo.startswith(bytes.fromhex('89504e470d0a1a0a')) or len(logo)<10000: raise RuntimeError('Original logo invalid')
           output=Path('akkus-freiwilligendienst-bewerbung/assets/agentur-akkus-logo.png')
           output.parent.mkdir(parents=True,exist_ok=True)
           output.write_bytes(logo)
