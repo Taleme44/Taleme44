@@ -185,16 +185,16 @@ if(f.type==="text"||f.type==="number"||f.type==="date"){
 var t=f.type==="text"?(f.inputType||"text"):f.type;
 out+='<input class="input" type="'+t+'" data-field="'+escapeHtml(f.id)+'" value="'+escapeHtml(v||"")+'"'+(f.min!==undefined?' min="'+f.min+'"':"")+(f.max!==undefined?' max="'+f.max+'"':"")+(f.type==="number"?' step="any"':"")+' placeholder="'+escapeHtml(f.placeholder||"Optional eingeben")+'">';
 }
-if(f.type==="select"){out+='<select class="select" data-field="'+escapeHtml(f.id)+'"><option value="">'+L('Bitte auswählen (freiwillig)','Choose (optional'))+'</option>'+f.options.map(function(o){return '<option value="'+escapeHtml(localOpt(o))+'"'+(v===o?' selected':'')+'>'+escapeHtml(localOpt(o))+'</option>';}).join("")+'</select>';}
+if(f.type==="select"){out+='<select class="select" data-field="'+escapeHtml(f.id)+'"><option value="">'+L('Bitte auswählen (freiwillig)','Choose (optional'))+'</option>'+f.options.map(function(o){return '<option value="'+escapeHtml(o)+'"'+(v===o?' selected':'')+'>'+escapeHtml(o)+'</option>';}).join("")+'</select>';}
 if(f.type==="choice"||isMulti){
 var selected=isMulti?(Array.isArray(v)?v:[]):[];
-out+='<div class="choices">'+f.options.map(function(o){var checked=isMulti?selected.indexOf(o)>=0:v===o;return '<button type="button" class="choice'+(checked?' selected':'')+'" data-option="'+escapeHtml(localOpt(o))+'" data-choice="'+escapeHtml(f.id)+'" aria-pressed="'+checked+'">'+escapeHtml(localOpt(o))+'</button>';}).join("")+'</div>';
+out+='<div class="choices">'+f.options.map(function(o){var checked=isMulti?selected.indexOf(o)>=0:v===o;return '<button type="button" class="choice'+(checked?' selected':'')+'" data-option="'+escapeHtml(o)+'" data-choice="'+escapeHtml(f.id)+'" aria-pressed="'+checked+'">'+escapeHtml(o)+'</button>';}).join("")+'</div>';
 if(f.maxSelect)out+='<div class="hint">Bitte höchstens '+f.maxSelect+' Optionen auswählen. Aktuell: '+selected.length+'</div>';
 }
 if(f.type==="textarea"){
 out+='<textarea class="textarea" id="text-'+escapeHtml(f.id)+'" data-field="'+escapeHtml(f.id)+'" placeholder="'+L('Schreibe deine Antwort ...','Write your answer ...')+'">'+escapeHtml(v||"")+'</textarea>';
 if(f.suggestions&&f.suggestions.length){
-out+='<div class="hint">Ideen zum Anklicken – deine Antwort kannst du anschließend frei ändern:</div><div class="suggestions">'+f.suggestions.map(function(o){return '<button type="button" class="suggestion" data-append="'+escapeHtml(f.id)+'" data-text="'+escapeHtml(localOpt(o))+'">+ '+escapeHtml(localOpt(o))+'</button>';}).join("")+'</div>';
+out+='<div class="hint">Ideen zum Anklicken – deine Antwort kannst du anschließend frei ändern:</div><div class="suggestions">'+f.suggestions.map(function(o){return '<button type="button" class="suggestion" data-append="'+escapeHtml(f.id)+'" data-text="'+escapeHtml(o)+'">+ '+escapeHtml(o)+'</button>';}).join("")+'</div>';
 }
 if(f.voice)out+='<div class="text-tools"><button type="button" class="mic" data-mic="'+escapeHtml(f.id)+'" title="Antwort diktieren">'+L('🎙 Antwort sprechen','🎙 Dictate answer')+'</button><span class="speech-note">Nur wenn dein Browser Spracherkennung unterstützt.</span></div>';
 }
@@ -262,7 +262,8 @@ var sug=e.target.closest("[data-append]");if(sug){var id=sug.getAttribute("data-
 var mic=e.target.closest("[data-mic]");if(mic){speakToField(mic.getAttribute("data-mic"),mic);return;}
 var rm=e.target.closest("[data-remove-intern]");if(rm){var i=Number(rm.getAttribute("data-remove-intern"));var arr=state.answers.internshipRows||[];arr.splice(i,1);render();return;}
 var removal=e.target.closest("[data-remove-file]");if(removal){var docId=removal.getAttribute("data-remove-file"),fileIx=Number(removal.getAttribute("data-remove-file-index"));(state.files[docId]||[]).splice(fileIx,1);render();return;}var tab=e.target.closest("[data-dash-tab]");if(tab){state.dashTab=tab.getAttribute("data-dash-tab");state.phase="finish";render();return;}var btn=e.target.closest("[data-act]");if(!btn)return;var act=btn.getAttribute("data-act");
-if(act==="start"){state.phase="form";state.index=0;render();}
+if(act==="setlang"){lang=btn.getAttribute("data-lang")==="en"?"en":"de";saveLanguage();stopSpeech();render();}
+else if(act==="start"){state.phase="form";state.index=0;render();}
 else if(act==="next")nextStep(1);
 else if(act==="skip")nextStep(1);
 else if(act==="back")nextStep(-1);
