@@ -1,0 +1,55 @@
+name: Check FSJ FÖJ BFD applicant portal
+on:
+  push:
+    paths:
+      - 'akkus-freiwilligendienst-bewerbung/vorschau/index.html'
+      - '.github/workflows/akkus-volunteer-qa.yml'
+  workflow_dispatch:
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JavaScript syntax and questionnaire
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('akkus-freiwilligendienst-bewerbung/vorschau/index.html')
+          h=p.read_text()
+          js=re.findall(r'<script>(.*?)</script>',h,re.S)
+          assert len(js)==1,len(js)
+          Path('/tmp/fsj.js').write_text(js[0])
+          assert 'function renderDashboard' in h
+          assert 'capture="environment"' in h or 'capture=\"environment\"' in h
+          print('HTML length',len(h),'JS length',len(js[0]))
+          PY
+          node --check /tmp/fsj.js
+      - name: Validate main interactive branches
+        run: |
+          cat >/tmp/check.cjs <<'JS'
+          const fs=require('fs'),vm=require('vm');
+          let src=fs.readFileSync('/tmp/fsj.js','utf8');
+          let checks=String.raw\`
+          var counter=0;
+          function check(ok,n){if(!ok)throw Error('FAIL '+n);console.log('PASS '+n);counter++}
+          check(questions.length>40,'many questions');
+          state.answers.inGermany='Ja';check(activeQuestions().some(x=>x.id==='residence'),'permit question when in Germany');
+          check(!activeQuestions().some(x=>x.id==='embassy'),'no embassy appointment if in Germany');
+          state.answers.inGermany='Nein';check(activeQuestions().some(x=>x.id==='embassy'),'embassy if abroad');
+          state.answers.socialFields=['Kindertagesstätte'];check(activeQuestions().some(x=>x.id==='childExperience'),'childcare conditional');
+          state.answers.socialFields=['Sport'];check(!activeQuestions().some(x=>x.id==='childExperience'),'childcare hides');
+          state.answers.driverYes='Ja';check(applicableDocs().some(d=>d.id==='driverFront'),'driving licence conditional');
+          state.answers.driverYes='Nein';check(!applicableDocs().some(d=>d.id==='driverFront'),'driving licence hides');
+          state.answers.inGermany='Ja';state.answers.hasPermit='Ja';check(applicableDocs().some(d=>d.id==='residenceBack'),'permit back conditional');
+          state.phase='finish';render();check(app.innerHTML.includes('dashboard-sidebar'),'dashboard renders');
+          state.phase='welcome';lang='en';render();check(app.innerHTML.includes('Start questionnaire'),'english welcome');
+          state.phase='form';state.index=0;render();check(app.innerHTML.includes('What is your first and last name?'),'english question');
+          console.log('Passed',counter);
+          \`;
+          src=src.replace(/\}\)\(\);\s*$/, m=>checks+m);
+          const app={innerHTML:'',addEventListener(){},querySelector(){return null}};
+          const c={document:{getElementById(){return app},documentElement:{lang:'de'}},window:{scrollTo(){}},localStorage:{getItem(){return null},setItem(){},removeItem(){}},alert(){},confirm(){return false},console,setTimeout,clearTimeout,Blob,URL};
+          vm.runInNewContext(src,c,{timeout:15000});
+          JS
+          node /tmp/check.cjs
