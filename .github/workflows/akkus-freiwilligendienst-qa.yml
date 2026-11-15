@@ -24,6 +24,7 @@ jobs:
           print("HTML chars",len(html),"JS chars",len(scripts[0]))
           PY
           node --check /tmp/freiwilligendienst.js
+          node --check akkus-freiwilligendienst-bewerbung/vorschau/translations.js
       - name: Conditional application smoke tests
         run: |
           cat > /tmp/assertions.js <<'JS'
@@ -82,11 +83,11 @@ jobs:
           state.index=activeQuestions().findIndex(q=>q.id==="whyVolunteer");render();
           ok(app.innerHTML.includes("data-mic")&&app.innerHTML.includes("data-append"),"voice and suggestions available");
           state.index=activeQuestions().findIndex(q=>q.id==="documents");render();
-          ok(app.innerHTML.includes('type="file"')&&app.innerHTML.includes("Bewerbungsvideo")&&app.innerHTML.includes("nicht hochgeladen"),"optional document picker clearly local");
+          ok(app.innerHTML.includes('type="file"')&&app.innerHTML.includes("Persönliches Bewerbungsvideo")&&app.innerHTML.includes("keinen sicheren Server-Upload"),"optional document picker clearly local");
           state.phase="finish";render();
           ok(app.innerHTML.includes("Vermittlungsvertrag")&&app.innerHTML.includes("Freiwilligendienstvereinbarung"),"finishing includes future agreement");
           ok(app.innerHTML.includes('data-act="print"'),"PDF via print dialog");
-          ok(app.innerHTML.includes("noch kein mit einem Server verbundenes Dashboard"),"dashboard honestly marked unavailable");
+          ok(app.innerHTML.includes("Demo-Dashboard ohne echten Login"),"dashboard honestly marked unavailable");
           ok(!app.innerHTML.includes("1.200")&&!app.innerHTML.includes("1200 €"),"no price amount");
           console.log("TOTAL TESTS",testCount);
           JS
