@@ -3,7 +3,8 @@
     "id": "one-name",
     "start": 0,
     "end": 1.73,
-    "title": "Wie heißt Elternteil 1?"
+    "title": "Wie heißt Elternteil 1?",
+    "build_version": 2
   },
   {
     "id": "single",
