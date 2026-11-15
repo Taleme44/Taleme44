@@ -1,0 +1,70 @@
+name: Embed Juna Audio for All 68 Questionnaire Questions
+on:
+  push:
+    paths:
+      - 'akkus-gasteltern-fragebogen/juna-timecodes.json'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Split Juna voiceover and embed every clip for mobile playback
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, re, subprocess, base64, datetime
+          root=pathlib.Path('akkus-gasteltern-fragebogen')
+          meta=json.loads((root/'juna-timecodes.json').read_text(encoding='utf-8'))
+          src=root/'audio/all-questions.mp3'
+          if not src.exists() or src.stat().st_size<100000:
+            raise RuntimeError('Full Juna audio is missing')
+          adir=root/'audio'
+          urls={}
+          durations=[]
+          for item in meta:
+            ident=item['id']
+            if not re.fullmatch(r'[a-z][a-z0-9-]{1,50}',ident):
+              raise ValueError('Unsafe question id '+ident)
+            start,end=float(item['start']),float(item['end'])
+            if start<0 or end<=start or end>150:
+              raise ValueError('Invalid timecodes '+ident)
+            dest=adir/('q-'+ident+'.mp3')
+            result=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y','-ss',str(start),'-t',str(end-start),'-i',str(src),'-vn','-codec:a','libmp3lame','-q:a','5',str(dest)],capture_output=True,text=True)
+            if result.returncode or dest.stat().st_size<900:
+              raise RuntimeError('Audio split failed for '+ident+': '+result.stderr[:500])
+            urls[ident]='data:audio/mpeg;base64,'+base64.b64encode(dest.read_bytes()).decode('ascii')
+            durations.append(end-start)
+          welcome=adir/'welcome.mp3'
+          if not welcome.exists():
+            raise RuntimeError('Juna welcome audio is missing')
+          urls={'welcome':'data:audio/mpeg;base64,'+base64.b64encode(welcome.read_bytes()).decode('ascii'),**urls}
+          hfile=root/'index.html'
+          html=hfile.read_text(encoding='utf-8')
+          marker=r'const JUNA_AUDIO_FILES=Object\\.freeze\\(\\{.*?\\}\\);'
+          escaped={k:v for k,v in urls.items()}
+          injected='const JUNA_AUDIO_FILES=Object.freeze('+json.dumps(escaped,ensure_ascii=False,separators=(',',':'))+');'
+          # Replace only the exact one-line declaration, preserving the rest of the questionnaire
+          html,newcount=re.subn(r'const JUNA_AUDIO_FILES=Object\.freeze\(\{[^\n]*?\}\);',lambda _:injected,html,count=1)
+          if newcount!=1:
+            raise RuntimeError('Questionnaire audio declaration not found')
+          html=html.replace('✓ Juna-Stimme – erste Aufnahmen','✓ Alle 68 Fragen mit Juna vertont')
+          needle='<button type="button" class="voicebtn" id="readQuestion">▶ Begrüßung mit Juna anhören</button>'
+          if needle in html:
+            html=html.replace(needle,needle+'<div class="welcome-audio"><span>Juna – Hörprobe</span><audio id="junaWelcomePreview" controls preload="none" playsinline src="'+urls['welcome']+'"></audio></div>',1)
+          html=html.replace('</style>','.welcome-audio{margin-top:15px;display:flex;flex-direction:column;gap:7px;max-width:420px}.welcome-audio span{font-weight:700;font-size:13px;color:var(--muted)}.welcome-audio audio{width:100%;height:45px}.voicebtn{cursor:pointer}</style>',1)
+          hfile.write_text(html,encoding='utf-8')
+          report={'voice':'Juna','engine':'ElevenLabs','questions':len(meta),'embeds':len(urls),'clips':[x['id'] for x in meta],'built_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'html_bytes':hfile.stat().st_size}
+          (root/'juna-build-status.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          print('BUILT',len(meta),'QUESTION CLIPS, HTML',hfile.stat().st_size,'BYTES')
+          PY
+      - name: Commit all playable audios and updated website
+        run: |
+          git config user.name 'Akkus Juna Audio'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add akkus-gasteltern-fragebogen/index.html akkus-gasteltern-fragebogen/juna-build-status.json akkus-gasteltern-fragebogen/audio/q-*.mp3
+          if ! git diff --cached --quiet; then
+            git commit -m 'Embed real ElevenLabs Juna audio for every spotlight question'
+            git push
+          fi
