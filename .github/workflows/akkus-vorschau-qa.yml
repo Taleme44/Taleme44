@@ -30,6 +30,7 @@ jobs:
           const code=fs.readFileSync('/tmp/akkus-preview.js','utf8');
           let tests=0;
           const testCode=`
+          let tests=0;
           function assert(ok,msg){if(!ok)throw Error('FAIL: '+msg);console.log('PASS',msg);tests++}
           assert(raw.length===35,'35 compact form steps');
           assert(!raw.some(q=>q.sec===5),'no post-match/BA section');
