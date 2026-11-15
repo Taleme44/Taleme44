@@ -41,7 +41,7 @@ jobs:
           state.values.single='Nein';
           assert(getSteps().some(q=>q.id==='two-name'),'two-parent name step included');
           state.phase='form';state.stepId='single';state.visited={};next();
-          assert(state.stepId==='two-name','No on single parent immediately shows second parent's name');
+          assert(state.stepId==='two-name','No immediately shows second parent name');
           state.values.single='Ja';state.stepId='single';next();
           assert(state.stepId!=='two-name','Yes on single parent skips second parent');
           state.values.single='Nein';
