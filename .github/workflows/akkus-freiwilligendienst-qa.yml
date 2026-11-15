@@ -1,0 +1,105 @@
+name: QA Akkus Freiwilligendienst Fragebogen
+on:
+  push:
+    paths:
+      - "akkus-freiwilligendienst-bewerbung/vorschau/index.html"
+      - ".github/workflows/akkus-freiwilligendienst-qa.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract inline JavaScript and check syntax
+        run: |
+          python3 - <<'PY'
+          import pathlib,re
+          p=pathlib.Path("akkus-freiwilligendienst-bewerbung/vorschau/index.html")
+          html=p.read_text(encoding="utf-8")
+          scripts=re.findall(r"<script>([\s\S]*?)</script>",html)
+          assert len(scripts)==1, "Expected exactly one JavaScript application"
+          pathlib.Path("/tmp/freiwilligendienst.js").write_text(scripts[0],encoding="utf-8")
+          print("HTML chars",len(html),"JS chars",len(scripts[0]))
+          PY
+          node --check /tmp/freiwilligendienst.js
+      - name: Conditional application smoke tests
+        run: |
+          cat > /tmp/assertions.js <<'JS'
+          var testCount=0;
+          function ok(v,m){if(!v)throw Error("FAILED "+m);testCount++;console.log("PASS "+m);}
+          state.phase="form";
+          ok(questions.length>=40,"full questionnaire present");
+          ok(questions.every(q=>q.fields.every(f=>!f.required)),"every field optional");
+          state.answers.inGermany="Ja";
+          ok(activeQuestions().some(q=>q.id==="aupairNow"),"Germany applicant gets au-pair question");
+          ok(activeQuestions().some(q=>q.id==="residence"),"Germany applicant gets residence");
+          ok(!activeQuestions().some(q=>q.id==="visaCountry"),"Germany applicant skips embassy country");
+          state.answers.aupairState="Ja, früher";
+          ok(activeQuestions().some(q=>q.id==="hostFamily"),"former au-pair host family question");
+          state.answers.inGermany="Nein";
+          ok(activeQuestions().some(q=>q.id==="previousGermany"),"abroad applicant gets past visit");
+          ok(activeQuestions().some(q=>q.id==="embassy"),"abroad applicant gets embassy appointment");
+          ok(!activeQuestions().some(q=>q.id==="residence"),"abroad applicant skips residence");
+          state.answers.embassyDateKnown="Nein";
+          state.index=activeQuestions().findIndex(q=>q.id==="embassy");render();
+          ok(!app.innerHTML.includes('data-field="embassyDate"'),"embassy no hides date");
+          state.answers.embassyDateKnown="Ja";render();
+          ok(app.innerHTML.includes('type="date" data-field="embassyDate"'),"embassy yes shows date");
+          state.answers.inGermany="Ja";
+          state.answers.hasPermit="Nein";
+          state.index=activeQuestions().findIndex(q=>q.id==="residence");render();
+          ok(!app.innerHTML.includes('data-field="permitUntil"'),"permit no hides expiry");
+          state.answers.hasPermit="Ja";render();
+          ok(app.innerHTML.includes('data-field="permitUntil"'),"permit yes shows expiry");
+          state.answers.hasPassport="Ja";
+          state.index=activeQuestions().findIndex(q=>q.id==="passport");render();
+          ok(app.innerHTML.includes('data-field="passportNumber"'),"passport yes shows number");
+          state.answers.didInternships="Ja";
+          state.answers.internshipRows=[{place:"Klinik",year:"2024",duration:"2 Monate"}];
+          state.index=activeQuestions().findIndex(q=>q.id==="internships");render();
+          ok(app.innerHTML.includes("Weiteres Praktikum hinzufügen"),"repeatable internships");
+          state.answers.socialFields=["Kindertagesstätte"];state.answers.ecoFields=[];
+          ok(activeQuestions().some(q=>q.id==="childExperience"),"kindergarten triggers child experience");
+          ok(!activeQuestions().some(q=>q.id==="careExperience"),"other care not asked");
+          state.answers.socialFields=["Seniorenheim"];
+          ok(activeQuestions().some(q=>q.id==="careExperience"),"senior home triggers care experience");
+          state.answers.ecoFields=["Alle Bereiche"];
+          ok(activeQuestions().some(q=>q.id==="outdoor"),"ecology triggers outdoor question");
+          state.answers.nationwide="Ganz Deutschland";state.index=activeQuestions().findIndex(q=>q.id==="regions");render();
+          ok(!app.innerHTML.includes('data-field="stateRegion"'),"nationwide hides region select");
+          state.answers.nationwide="Bestimmte Region";render();
+          ok(app.innerHTML.includes('data-field="stateRegion"'),"regional applicant sees German states");
+          state.answers.future="Ausbildung in Deutschland";state.index=activeQuestions().findIndex(q=>q.id==="afterYear");render();
+          ok(app.innerHTML.includes('data-field="futureTraining"'),"training plan details");
+          state.answers.future="Studium";render();
+          ok(app.innerHTML.includes('data-field="futureStudy"'),"study plan subject");
+          state.answers.needsRoom="Ja";state.index=activeQuestions().findIndex(q=>q.id==="accommodation");render();
+          ok(app.innerHTML.includes('data-choice="selfFinanceRoom"'),"accommodation yes asks financing");
+          state.answers.needsRoom="Nein";render();
+          ok(!app.innerHTML.includes('data-choice="selfFinanceRoom"'),"accommodation no skips financing");
+          state.index=activeQuestions().findIndex(q=>q.id==="whyVolunteer");render();
+          ok(app.innerHTML.includes("data-mic")&&app.innerHTML.includes("data-append"),"voice and suggestions available");
+          state.index=activeQuestions().findIndex(q=>q.id==="documents");render();
+          ok(app.innerHTML.includes('type="file"')&&app.innerHTML.includes("Bewerbungsvideo")&&app.innerHTML.includes("nicht hochgeladen"),"optional document picker clearly local");
+          state.phase="finish";render();
+          ok(app.innerHTML.includes("Vermittlungsvertrag")&&app.innerHTML.includes("Freiwilligendienstvereinbarung"),"finishing includes future agreement");
+          ok(app.innerHTML.includes('data-act="print"'),"PDF via print dialog");
+          ok(app.innerHTML.includes("noch kein mit einem Server verbundenes Dashboard"),"dashboard honestly marked unavailable");
+          ok(!app.innerHTML.includes("1.200")&&!app.innerHTML.includes("1200 €"),"no price amount");
+          console.log("TOTAL TESTS",testCount);
+          JS
+          cat > /tmp/test.cjs <<'JS'
+          const fs=require("fs"),vm=require("vm");
+          let js=fs.readFileSync("/tmp/freiwilligendienst.js","utf8");
+          const assertions=fs.readFileSync("/tmp/assertions.js","utf8");
+          if(!js.includes("})();"))throw Error("Missing app closing");
+          js=js.replace(/\}\)\(\);\s*$/s,function(end){return assertions+end;});
+          const app={innerHTML:"",addEventListener(){}};
+          const ctx={document:{getElementById(id){return id==="app"?app:null;}},window:{scrollTo(){},print(){}},
+          localStorage:{getItem(){return null},setItem(){},removeItem(){}},
+          alert(){},confirm(){return false},console,setTimeout,clearTimeout,Date,Blob,URL};
+          vm.runInNewContext(js,ctx,{timeout:10000});
+          JS
+          node /tmp/test.cjs
