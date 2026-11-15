@@ -151,6 +151,28 @@ function localDocName(d){return lang==="en"?(englishDocNames[d.id]||d.name):d.na
 var englishDocNames={
 passport:"Passport — multiple pages",germanCert:"German language certificate",schoolDoc:"School certificates — multiple files",universityDoc:"Training or university certificates",internshipDocs:"Internship references",otherDocs:"Other certificates",cv:"Curriculum vitae (CV)",motivation:"Motivation letter",video:"Introduction video",visaCard:"Visa or residence permit — front and back",driverFront:"Driving licence — front and back"
 };
+var englishDocDescriptions={
+passport:"Upload all relevant passport pages. Multiple images or a PDF are accepted.",
+residenceFront:"Front of your current German residence permit, if you have one.",
+residenceBack:"Back of your residence permit card, if applicable.",
+visaPhoto:"Visa sticker or page, if available.",
+germanCert:"German certificate from Goethe, ÖSD, telc, TestDaF or another provider.",
+schoolDoc:"You may choose several school certificates in the original language. German translation is NOT required for the initial application.",
+universityDoc:"Training or university certificate, including original-language documents.",
+internshipDocs:"Multiple internship references may be added.",
+driverFront:"Front of your driving licence.",
+driverBack:"Back of your driving licence.",
+otherDocs:"First aid, care work, language courses and other relevant certificates.",
+cv:"CV in German or English, PDF or Word.",
+motivation:"Optional motivation letter in German or English.",
+video:"Please make a short introduction video (about 1–2 minutes) for your future volunteer supervisor or placement. Introduce yourself and explain why you would like to volunteer in Germany."
+};
+englishDocNames.residenceFront="Residence permit — front";
+englishDocNames.residenceBack="Residence permit — back";
+englishDocNames.visaPhoto="Visa / visa page";
+englishDocNames.driverBack="Driving licence — back";
+englishDocNames.driverFront="Driving licence — front";
+function localDocDesc(d){return lang==="en"?(englishDocDescriptions[d.id]||d.desc):d.desc;}
 function saveLanguage(){try{localStorage.setItem("akkus_volunteer_lang",lang);}catch(e){}document.documentElement.lang=lang;}
 try{lang=localStorage.getItem("akkus_volunteer_lang")==="en"?"en":"de";}catch(e){}
 
@@ -233,11 +255,11 @@ function documentCard(d){
 var chosen=fileList(d.id),complete=chosen.length>0;
 var items=chosen.map(function(name,i){return '<div class="attached-file"><span>✓ '+escapeHtml(name)+'</span><button type="button" data-remove-file="'+escapeHtml(d.id)+'" data-remove-file-index="'+i+'" aria-label="Datei aus Auswahl entfernen">×</button></div>';}).join("");
 var u='u-'+d.id,cam='c-'+d.id;
-var actions='<div class="doc-actions"><label for="'+u+'" class="btn small secondary">📁 Dateien auswählen</label><input class="visually-hidden" id="'+u+'" type="file" data-file="'+escapeHtml(d.id)+'" accept="'+escapeHtml(d.accept)+'"'+(d.multiple?' multiple':'')+'>';
-if(d.photo)actions+='<label for="'+cam+'" class="btn small secondary">📷 Foto machen</label><input class="visually-hidden" id="'+cam+'" type="file" accept="image/*" capture="environment" data-file-camera="'+escapeHtml(d.id)+'">';
-if(d.video)actions+='<label for="'+cam+'" class="btn small secondary">🎥 Video aufnehmen</label><input class="visually-hidden" id="'+cam+'" type="file" accept="video/*" capture="user" data-file-camera="'+escapeHtml(d.id)+'">';
+var actions='<div class="doc-actions"><label for="'+u+'" class="btn small secondary">'+L('📁 Dateien auswählen','📁 Choose files')+'</label><input class="visually-hidden" id="'+u+'" type="file" data-file="'+escapeHtml(d.id)+'" accept="'+escapeHtml(d.accept)+'"'+(d.multiple?' multiple':'')+'>';
+if(d.photo)actions+='<label for="'+cam+'" class="btn small secondary">'+L('📷 Foto machen','📷 Take photo')+'</label><input class="visually-hidden" id="'+cam+'" type="file" accept="image/*" capture="environment" data-file-camera="'+escapeHtml(d.id)+'">';
+if(d.video)actions+='<label for="'+cam+'" class="btn small secondary">'+L('🎥 Video aufnehmen','🎥 Record video')+'</label><input class="visually-hidden" id="'+cam+'" type="file" accept="video/*" capture="user" data-file-camera="'+escapeHtml(d.id)+'">';
 actions+='</div>';
-return '<article class="doc-status-card '+(complete?'doc-complete':'doc-missing')+'"><div class="doc-top"><span class="doc-icon">'+(complete?'✓':'!')+'</span><span class="doc-label">'+escapeHtml(d.name)+'</span><span class="doc-tag">'+(complete?'Ausgewählt':'Noch offen')+'</span></div><p class="doc-desc">'+escapeHtml(d.desc)+'</p><div class="doc-feedback">'+(complete?'Auf diesem Gerät ausgewählt – nicht hochgeladen':'Noch nicht hinterlegt · freiwillig')+'</div>'+items+actions+'</article>';
+return '<article class="doc-status-card '+(complete?'doc-complete':'doc-missing')+'"><div class="doc-top"><span class="doc-icon">'+(complete?'✓':'!')+'</span><span class="doc-label">'+escapeHtml(localDocName(d))+'</span><span class="doc-tag">'+(complete?L('Ausgewählt','Selected'):L('Noch offen','Missing'))+'</span></div><p class="doc-desc">'+escapeHtml(localDocDesc(d))+'</p><div class="doc-feedback">'+(complete?L('Auf diesem Gerät ausgewählt – nicht hochgeladen','Selected on this device – not uploaded'):L('Noch nicht hinterlegt · freiwillig','Not selected yet · optional'))+'</div>'+items+actions+'</article>';
 }
 function renderFiles(){return '<div class="formfield wide"><div class="preview-only"><b>Wichtiger Hinweis:</b> Dateien können hier ausgewählt oder mit der Kamera aufgenommen werden. <b>Diese Vorschau besitzt noch keinen sicheren Server-Upload.</b> Die Dateien werden weder an Agentur Akkus verschickt noch dauerhaft gespeichert. Bitte sende hier keine echten Ausweisdokumente, bis das geschützte Bewerberkonto aktiviert ist.</div><div class="upload-grid">'+applicableDocs().map(documentCard).join("")+'</div></div>';}
 function speakCurrent(){var q=current();if(!q||!("speechSynthesis" in window))return;try{window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(localTitle(q));u.lang=lang==="en"?"en-US":"de-DE";u.rate=.94;window.speechSynthesis.speak(u);}catch(e){console.warn("Audio nicht verfügbar",e);}}
