@@ -1,0 +1,86 @@
+name: QA Agentur Akkus Gasteltern-Fragebogen Vorschau
+on:
+  push:
+    paths:
+      - 'akkus-gasteltern-fragebogen/vorschau/index.html'
+      - '.github/workflows/akkus-vorschau-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract JavaScript and validate syntax
+        run: |
+          python3 - <<'PY'
+          import re,pathlib
+          html=pathlib.Path('akkus-gasteltern-fragebogen/vorschau/index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script>(.*?)</script>',html,re.S)
+          assert len(scripts)==1, f'Expected one inline JS script, got {len(scripts)}'
+          pathlib.Path('/tmp/akkus-preview.js').write_text(scripts[0],encoding='utf-8')
+          print('JS characters:',len(scripts[0]))
+          PY
+          node --check /tmp/akkus-preview.js
+      - name: Verify form logic and interactive conditional steps
+        run: |
+          cat > /tmp/akkus-qa.cjs <<'JS'
+          const fs=require('fs'),vm=require('vm');
+          const code=fs.readFileSync('/tmp/akkus-preview.js','utf8');
+          let tests=0;
+          const testCode=`
+          function assert(ok,msg){if(!ok)throw Error('FAIL: '+msg);console.log('PASS',msg);tests++}
+          assert(raw.length===35,'35 compact form steps');
+          assert(!raw.some(q=>q.sec===5),'no post-match/BA section');
+          state.autoAudio=false;
+          state.values.single='Ja';
+          assert(!getSteps().some(q=>q.id==='two-name'),'single parents skip second parent');
+          assert(!getSteps().some(q=>q.id==='relation'),'single parents skip relationship');
+          state.values.single='Nein';
+          assert(getSteps().some(q=>q.id==='two-name'),'two-parent name step included');
+          state.values.p1first='Mara';state.values.p2first='Leo';
+          state.phase='form';state.stepId='parent-at-home';render();
+          assert(app.innerHTML.includes('Mara')&&app.innerHTML.includes('Leo'),'personal names displayed');
+          state.values.single='Ja';render();
+          assert(app.innerHTML.includes('Ist Mara tagsüber zu Hause?')&&!app.innerHTML.includes('Ist Leo tagsüber zu Hause?'),'solo parent personalized');
+          state.values.single='Nein';
+          state.values.kids='2';
+          assert(getSteps().some(q=>q.id==='child-1')&&getSteps().some(q=>q.id==='child-2'),'dynamic child information');
+          state.stepId='family-eu';state.values.euMember='Nein';render();
+          assert(app.innerHTML.includes('data-field="nonEUcitizenships"'),'non-EU citizenship text field appears on No');
+          state.values.euMember='Ja';render();
+          assert(!app.innerHTML.includes('data-field="nonEUcitizenships"'),'non-EU citizenship field hides on Yes');
+          state.stepId='address';render();
+          assert(['street','houseNo','zip','city'].every(id=>app.innerHTML.includes('data-field="'+id+'"')),'all four address inputs share one page');
+          state.stepId='home-type';render();
+          assert(app.innerHTML.includes('data-option="Großstadt"')&&app.innerHTML.includes('data-option="Kleinstadt"')&&!app.innerHTML.includes('data-option="Stadt"'),'only three requested location choices');
+          state.stepId='shopping';render();
+          assert(app.innerHTML.includes('Einheit: km'),'km visible on distance question');
+          state.stepId='special-needs';state.values.specialYes='Nein';render();
+          assert(!app.innerHTML.includes('data-field="specialNeeds"'),'special notes hidden on No');
+          state.values.specialYes='Ja';render();
+          assert(app.innerHTML.includes('data-field="specialNeeds"'),'special notes appear on Yes');
+          state.stepId='terms';render();
+          assert(app.innerHTML.includes('30 Stunden')&&app.innerHTML.includes('280 €')&&app.innerHTML.includes('70 €'),'fixed working conditions panel');
+          state.stepId='arrival';render();
+          assert(app.innerHTML.includes('data-field="wishMonth"')&&app.innerHTML.includes('data-field="wishYear"'),'month/year without exact date');
+          state.stepId='daily-tasks';render();
+          assert(app.innerHTML.includes('Hausaufgabenhilfe')&&app.innerHTML.includes('Kita oder Schule bringen'),'requested task buttons');
+          state.stepId='country-exclusions';state.values.excludeCountries='Ja';render();
+          assert(app.innerHTML.includes('data-field="excludedCountries"'),'country exclusion follow-up appears');
+          state.stepId='consent';render();
+          assert(app.innerHTML.includes('data-choice="profileConsent"')&&app.innerHTML.includes('vollständige Anschrift'),'explicit voluntary data sharing choice');
+          state.values={};state.visited={};state.stepId='one-name';state.phase='form';next();
+          assert(state.stepId==='single'&&state.visited['one-name']===true,'all questions skippable while blank');
+          console.log('TOTAL CHECKS PASSED:',tests);
+          `;
+          if(!code.includes('})();'))throw Error('Expected app closure not found');
+          const combined=code.replace(/\}\)\(\);\s*$/s,(m)=>testCode+m);
+          const app={innerHTML:'',addEventListener(){},querySelector(){return null}};
+          const ctx={console,document:{querySelector(q){return q==='#app'?app:null}},window:{scrollTo(){}},
+            localStorage:{getItem(){return null},setItem(){},removeItem(){}},alert(){},confirm(){return false},
+            setTimeout,clearTimeout,Blob,URL};
+          vm.runInNewContext(combined,ctx,{timeout:10000});
+          JS
+          node /tmp/akkus-qa.cjs
