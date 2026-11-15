@@ -245,3 +245,21 @@ a{color:#0f6459}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 @media print{.dashboard-sidebar,.header,.dashboard-top,.dashboard-main>.preview-only,.doc-status-card,.dashboard-nav,.dash-shortcuts,.dash-metrics{display:none!important}
  .dashboard-shell{display:block;max-width:none;padding:0}.dashboard-main{width:100%}.dash-panel{border:0;box-shadow:none}}
+
+
+/* Last-mile phone sizing: prevent long dashboard actions from widening the grid */
+.dashboard-shell,.dashboard-main,.dashboard-sidebar,.dashboard-top,.dash-panel{min-width:0;box-sizing:border-box}
+.dashboard-top>div{min-width:0}
+.dashboard-main .preview-only{overflow-wrap:anywhere}
+.dashboard-sidebar .dashboard-nav{max-width:100%;min-width:0}
+.doc-status-card,.doc-label,.doc-desc,.summary-row{overflow-wrap:anywhere}
+@media(max-width:650px){
+  .dashboard-top{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+  .dashboard-top>.btn{align-self:flex-start}
+  .dashboard-shell{width:100%;max-width:100%;overflow:hidden}
+  .dashboard-main,.dashboard-sidebar,.dash-panel{width:100%;max-width:100%}
+  .dashboard-nav{width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+  .dashboard-main .dash-panel .secondary-actions{max-width:100%}
+  .dashboard-main .dash-panel .secondary-actions .btn{max-width:100%;white-space:normal}
+  .dashboard-top h1{font-size:clamp(29px,7vw,37px)}
+}
