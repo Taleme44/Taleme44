@@ -86,7 +86,9 @@ jobs:
           ok(app.innerHTML.includes('type="file"')&&app.innerHTML.includes("Persönliches Bewerbungsvideo")&&app.innerHTML.includes("keinen sicheren Server-Upload"),"optional document picker clearly local");
           state.phase="finish";render();
           ok(app.innerHTML.includes("Vermittlungsvertrag")&&app.innerHTML.includes("Freiwilligendienstvereinbarung"),"finishing includes future agreement");
+          state.dashTab="answers";render();
           ok(app.innerHTML.includes('data-act="print"'),"PDF via print dialog");
+          state.dashTab="overview";render();
           ok(app.innerHTML.includes("Demo-Dashboard ohne echten Login"),"dashboard honestly marked unavailable");
           ok(!app.innerHTML.includes("1.200")&&!app.innerHTML.includes("1200 €"),"no price amount");
           console.log("TOTAL TESTS",testCount);
